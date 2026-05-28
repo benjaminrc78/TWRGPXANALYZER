@@ -1,0 +1,39 @@
+/* Styling for the premium PDF Report Button in Giro GPX Dashboard */
+.pdf-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--strava-orange, #fc6100), #e04f00);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(252, 97, 0, 0.25);
+}
+
+.pdf-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(252, 97, 0, 0.4);
+  filter: brightness(1.05);
+}
+
+.pdf-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(252, 97, 0, 0.2);
+}
+
+.pdf-button svg {
+  transition: transform 0.3s ease;
+}
+
+.pdf-button:hover svg {
+  transform: translateY(2px);
+}

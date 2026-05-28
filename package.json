@@ -1,0 +1,35 @@
+{
+  "name": "ciclismo-dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Dashboard de rutas de ciclismo con análisis avanzado",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "node server.js",
+    "dev:client": "vite",
+    "build": "node increment-version.js && vite build",
+    "preview": "vite preview",
+    "android:sync": "npm run build && npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.1",
+    "axios": "^1.7.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.8.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@babel/code-frame": "^7.29.0",
+    "@capacitor/cli": "6.2.1",
+    "@capacitor/core": "6.2.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "vite": "^5.4.21"
+  }
+}
