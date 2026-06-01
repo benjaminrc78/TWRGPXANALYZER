@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Source Code
@@ -68,3 +70,13 @@ jobs:
           name: app-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 7
+
+      - name: Commit and push generated APK & AAB to root
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk com.tuwebenlared.gpxanalyzer.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab com.tuwebenlared.gpxanalyzer.aab
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add com.tuwebenlared.gpxanalyzer.apk com.tuwebenlared.gpxanalyzer.aab
+          git commit -m "build: auto-compile com.tuwebenlared.gpxanalyzer.apk & .aab [skip ci]" || echo "No changes to commit"
+          git push
