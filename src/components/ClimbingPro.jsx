@@ -1,26 +1,43 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 // Color definitions matching Garmin Climb Pro slope grades
+// Color definitions matching classic mountain climb (puerto) slope grades
 function getGradeColor(grade) {
-  if (grade <= 0) return '#64748b';  // Slate Gray (Flat / Downhill)
-  if (grade <= 3) return '#10b981';  // Green (0% - 3%, Easy)
-  if (grade <= 6) return '#eab308';  // Yellow (3% - 6%, Moderate)
-  if (grade <= 9) return '#f97316';  // Orange (6% - 9%, Steep)
+  if (grade <= 0) return '#475569';  // Downhill / Flat (Slate Gray)
+  if (grade <= 3) return '#22c55e';  // Green (0% - 3%, Easy)
+  if (grade <= 5) return '#84cc16';  // Light Green / Lime (3% - 5%, Gentle)
+  if (grade <= 7) return '#eab308';  // Yellow (5% - 7%, Moderate)
+  if (grade <= 9) return '#f97316';  // Orange (7% - 9%, Steep)
   if (grade <= 12) return '#ef4444'; // Red (9% - 12%, Very Steep)
-  return '#a78bfa';                  // Purple (> 12%, Extreme)
+  if (grade <= 15) return '#b91c1c'; // Dark Red (12% - 15%, Extreme)
+  return '#7f1d1d';                  // Crimson / Very Dark Red (> 15%, Extreme+)
 }
 
 function getGradeLabel(grade) {
   if (grade <= 0) return 'Llano/Bajada';
   if (grade <= 3) return 'Fácil';
-  if (grade <= 6) return 'Moderado';
+  if (grade <= 5) return 'Suave';
+  if (grade <= 7) return 'Moderado';
   if (grade <= 9) return 'Empinado';
   if (grade <= 12) return 'Muy Duro';
-  return 'Extremo';
+  if (grade <= 15) return 'Extremo';
+  return 'Inhumano';
 }
 
 export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLocked, onHoverPoint }) {
   if (!climb || !points || points.length === 0) return null;
+
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isExpanded) {
+        setIsExpanded(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isExpanded]);
 
   const climbPoints = points.slice(climb.startIndex, climb.endIndex + 1);
   if (climbPoints.length === 0) return null;
@@ -29,6 +46,7 @@ export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLock
   const minEle = Math.min(...climbPoints.map(p => p.ele));
   const maxEle = Math.max(...climbPoints.map(p => p.ele));
   const eleRange = maxEle - minEle || 10;
+  const maxGrade = Math.max(...climbPoints.map(p => p.grade || 0));
 
   // SVG configuration
   const width = 360;
@@ -55,12 +73,14 @@ export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLock
   let eleRemaining = climb.eleGain;
   let currentSlope = climb.avgGrade;
 
-  if (isHoveringOnClimb && hoverPoint) {
-    hoverCoords = getCoords(hoverPoint);
-    distRemaining = Math.max(0, climb.endKm - hoverPoint.distance);
+  const fullHoverPoint = isHoveringOnClimb ? climbPoints.find(p => p.index === hoverPoint.index) : null;
+
+  if (isHoveringOnClimb && fullHoverPoint) {
+    hoverCoords = getCoords(fullHoverPoint);
+    distRemaining = Math.max(0, climb.endKm - fullHoverPoint.distance);
     const endPt = climbPoints[climbPoints.length - 1];
-    eleRemaining = Math.max(0, endPt.ele - hoverPoint.ele);
-    currentSlope = hoverPoint.grade;
+    eleRemaining = Math.max(0, endPt.ele - fullHoverPoint.ele);
+    currentSlope = fullHoverPoint.grade !== undefined ? fullHoverPoint.grade : 0;
   }
 
   // Generate dynamic gradient stops for SVG stroke/fill
@@ -116,14 +136,22 @@ export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLock
 
   return (
     <div className="glass-card climb-pro-widget" style={{
-      height: '100%',
+      height: isExpanded ? '85vh' : '100%',
+      width: isExpanded ? '90vw' : '100%',
+      maxWidth: isExpanded ? '850px' : 'none',
+      maxHeight: isExpanded ? '600px' : 'none',
       display: 'flex',
       flexDirection: 'column',
-      position: 'relative',
+      position: isExpanded ? 'fixed' : 'relative',
+      top: isExpanded ? '50%' : 'auto',
+      left: isExpanded ? '50%' : 'auto',
+      transform: isExpanded ? 'translate(-50%, -50%)' : 'none',
+      zIndex: isExpanded ? 10000 : 1,
+      boxShadow: isExpanded ? '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 100vw rgba(4, 5, 7, 0.8)' : 'var(--shadow-lg)',
       padding: '20px',
       background: 'var(--climb-pro-bg)',
       border: '1px solid var(--climb-pro-border)',
-      boxShadow: 'var(--shadow-lg)'
+      transition: 'var(--transition)'
     }}>
       {/* Widget Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -138,32 +166,67 @@ export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLock
             </span>
           )}
         </div>
-        <button 
-          onClick={onClose} 
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'var(--transition)'
-          }}
-          className="modal-close"
-          title="Volver a la lista de puertos"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'var(--transition)'
+            }}
+            title={isExpanded ? "Contraer Climbing Pro (Esc)" : "Expandir Climbing Pro a pantalla completa"}
+          >
+            {isExpanded ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 14h6v6"/>
+                <path d="M20 10h-6V4"/>
+                <line x1="14" y1="10" x2="21" y2="3"/>
+                <line x1="10" y1="14" x2="3" y2="21"/>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h6v6"/>
+                <path d="M9 21H3v-6"/>
+                <line x1="21" y1="3" x2="14" y2="10"/>
+                <line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+            )}
+          </button>
+          
+          <button 
+            onClick={onClose} 
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'var(--transition)'
+            }}
+            className="modal-close"
+            title="Volver a la lista de puertos"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Stats Header Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', textAlign: 'center' }}>
           <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '2px' }}>Distancia</div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
@@ -178,8 +241,14 @@ export default function ClimbingPro({ climb, points, hoverPoint, onClose, isLock
         </div>
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', textAlign: 'center' }}>
           <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '2px' }}>Pend. Media</div>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--strava-orange)', fontFamily: 'var(--font-display)' }}>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: getGradeColor(climb.avgGrade), fontFamily: 'var(--font-display)' }}>
             {climb.avgGrade}%
+          </div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', textAlign: 'center' }}>
+          <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '2px' }}>Pend. Máx</div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: getGradeColor(maxGrade), fontFamily: 'var(--font-display)' }}>
+            {maxGrade.toFixed(1)}%
           </div>
         </div>
       </div>

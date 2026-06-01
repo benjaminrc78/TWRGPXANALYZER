@@ -218,7 +218,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                <XAxis dataKey="distance" hide={true} />
+                <XAxis dataKey="distance" height={0} tick={false} tickLine={false} axisLine={false} />
                 <YAxis 
                   domain={['dataMin - 10', 'dataMax + 10']} 
                   stroke="var(--text-muted)" 
@@ -293,7 +293,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   onMouseLeave={handleMouseLeave}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                  <XAxis dataKey="distance" hide={true} />
+                  <XAxis dataKey="distance" height={0} tick={false} tickLine={false} axisLine={false} />
                   <YAxis 
                     domain={[50, 'dataMax + 5']} 
                     stroke="var(--text-muted)" 
@@ -368,7 +368,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                 onMouseLeave={handleMouseLeave}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                <XAxis dataKey="distance" hide={true} />
+                <XAxis dataKey="distance" height={0} tick={false} tickLine={false} axisLine={false} />
                 <YAxis 
                   domain={[0, 'dataMax + 5']} 
                   stroke="var(--text-muted)" 
@@ -442,7 +442,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                 onMouseLeave={handleMouseLeave}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                <XAxis dataKey="distance" hide={true} />
+                <XAxis dataKey="distance" height={0} tick={false} tickLine={false} axisLine={false} />
                 <YAxis 
                   domain={[0, 'dataMax + 50']} 
                   stroke="var(--text-muted)" 
