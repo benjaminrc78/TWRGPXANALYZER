@@ -40,11 +40,12 @@ jobs:
       - name: Sync Capacitor Android Project
         run: npx cap sync
 
-      - name: Build Android App (APK Debug & AAB Release)
+      - name: Build Android App (APK Debug, Release APK & AAB Release)
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          ./gradlew assembleRelease
           ./gradlew :app:bundleRelease
 
       - name: Upload Debug APK
@@ -52,6 +53,13 @@ jobs:
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 7
 
       - name: Upload Release AAB (Google Play Bundle)

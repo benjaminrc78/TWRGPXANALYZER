@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.ciclismo.dashboard"
+    namespace "com.tuwebenlared.gpxanalyzer"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.ciclismo.dashboard"
+        applicationId "com.tuwebenlared.gpxanalyzer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
