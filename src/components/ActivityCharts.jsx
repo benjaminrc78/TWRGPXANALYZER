@@ -8,17 +8,20 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
   const hasHr = safePoints.some(p => p.hr && p.hr > 0);
 
   // Downsample data for rendering performance in Recharts
-  const maxChartPoints = 800;
-  const downsampleStep = Math.ceil(safePoints.length / maxChartPoints) || 1;
-  const chartPoints = [];
-  
-  for (let i = 0; i < safePoints.length; i += downsampleStep) {
-    chartPoints.push(safePoints[i]);
-  }
-  // Make sure the last point is always included to show final distance
-  if (safePoints.length > 0 && chartPoints.length > 0 && chartPoints[chartPoints.length - 1].index !== safePoints[safePoints.length - 1].index) {
-    chartPoints.push(safePoints[safePoints.length - 1]);
-  }
+  const chartPoints = React.useMemo(() => {
+    const maxChartPoints = 800;
+    const downsampleStep = Math.ceil(safePoints.length / maxChartPoints) || 1;
+    const result = [];
+    
+    for (let i = 0; i < safePoints.length; i += downsampleStep) {
+      result.push(safePoints[i]);
+    }
+    // Make sure the last point is always included to show final distance
+    if (safePoints.length > 0 && result.length > 0 && result[result.length - 1].index !== safePoints[safePoints.length - 1].index) {
+      result.push(safePoints[safePoints.length - 1]);
+    }
+    return result;
+  }, [safePoints]);
 
   // Find the point closest to hoverPoint
   const hoveredData = React.useMemo(() => {
@@ -260,7 +263,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   />
                 )}
 
-                <Area type="monotone" dataKey="ele" name="Elevación" stroke="var(--strava-orange)" strokeWidth={1.5} fillOpacity={1} fill="url(#eleGrad)" />
+                <Area type="monotone" dataKey="ele" name="Elevación" stroke="var(--strava-orange)" strokeWidth={1.5} fillOpacity={1} fill="url(#eleGrad)" isAnimationActive={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -335,7 +338,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                     />
                   )}
 
-                  <Line type="monotone" dataKey="hr" name="Frecuencia Cardíaca" stroke="var(--zone-5)" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} connectNulls={true} />
+                  <Line type="monotone" dataKey="hr" name="Frecuencia Cardíaca" stroke="var(--zone-5)" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} connectNulls={true} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -410,7 +413,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   />
                 )}
 
-                <Line type="monotone" dataKey="speed" name="Velocidad" stroke="var(--zone-3)" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="speed" name="Velocidad" stroke="var(--zone-3)" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -484,7 +487,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   />
                 )}
 
-                <Line type="monotone" dataKey="watts" name="Potencia" stroke="#eab308" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="watts" name="Potencia" stroke="#eab308" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -565,7 +568,7 @@ export default function ActivityCharts({ points = [], onHoverPoint, activeClimb 
                   />
                 )}
 
-                <Line type="monotone" dataKey="cadence" name="Cadencia" stroke="#10b981" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="cadence" name="Cadencia" stroke="#10b981" strokeWidth={1.5} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

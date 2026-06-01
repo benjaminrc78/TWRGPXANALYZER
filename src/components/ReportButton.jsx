@@ -148,7 +148,7 @@ export default function ReportButton({ activity, config }) {
       const stats = activity.stats || {};
       const climbs = activity.climbs || [];
 
-      const name = config?.name || 'Benjamín';
+      const name = config?.name || 'Deportista';
       const age = config?.age || 47;
       const weight = config?.weight || 77;
       const z1Max = config?.hrZones?.z1Max || 124;

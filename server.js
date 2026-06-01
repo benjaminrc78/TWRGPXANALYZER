@@ -530,7 +530,7 @@ app.post('/api/upload', (req, res) => {
 });
 
 // Catch-all route to serve the React SPA index.html
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   const indexPath = path.join(__dirname, 'dist', 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);

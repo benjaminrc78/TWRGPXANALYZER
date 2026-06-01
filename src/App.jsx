@@ -4,6 +4,8 @@ import RouteMap from './components/RouteMap';
 import ActivityCharts from './components/ActivityCharts';
 import HeartRateZones from './components/HeartRateZones';
 import ReportButton from './components/ReportButton';
+import ClimbingPro from './components/ClimbingPro';
+import appIcon from '../icono.png';
 import versionData from './version.json';
 
 // Format date into Spanish friendly format
@@ -486,9 +488,29 @@ export default function App() {
   const [hoverPoint, setHoverPoint] = useState(null);
   const [activeClimb, setActiveClimb] = useState(null);
   
+  const activeClimbFromHover = selectedActivity?.climbs?.find(climb => {
+    if (!hoverPoint) return false;
+    return hoverPoint.index >= climb.startIndex && hoverPoint.index <= climb.endIndex;
+  });
+
+  const currentClimbToShow = activeClimb || activeClimbFromHover;
+  
   const [listLoading, setListLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [isLocalMode, setIsLocalMode] = useState(false);
+
+  const [isFirstRun, setIsFirstRun] = useState(() => {
+    return !localStorage.getItem('giro_gpx_user_config');
+  });
+
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('gpx_analyzer_theme') || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('gpx_analyzer_theme', theme);
+  }, [theme]);
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [config, setConfig] = useState(() => {
@@ -500,19 +522,18 @@ export default function App() {
         console.error('Error parsing user config', e);
       }
     }
-    const defaults = {
-      name: 'Benjamín',
-      age: 47,
-      weight: 77,
+    // Return empty defaults for onboarding
+    return {
+      name: 'nombre',
+      age: '',
+      weight: '',
       hrZones: {
-        z1Max: 124,
-        z2Max: 145,
-        z3Max: 158,
-        z4Max: 170
+        z1Max: '',
+        z2Max: '',
+        z3Max: '',
+        z4Max: ''
       }
     };
-    localStorage.setItem('giro_gpx_user_config', JSON.stringify(defaults));
-    return defaults;
   });
 
   const [tempName, setTempName] = useState('');
@@ -523,6 +544,12 @@ export default function App() {
   const [tempZ3Max, setTempZ3Max] = useState('');
   const [tempZ4Max, setTempZ4Max] = useState('');
   const [valError, setValError] = useState('');
+
+  useEffect(() => {
+    if (isFirstRun) {
+      setIsConfigOpen(true);
+    }
+  }, [isFirstRun]);
 
   useEffect(() => {
     if (isConfigOpen) {
@@ -587,6 +614,7 @@ export default function App() {
     };
     localStorage.setItem('giro_gpx_user_config', JSON.stringify(newConfig));
     setConfig(newConfig);
+    setIsFirstRun(false);
     setIsConfigOpen(false);
   };
 
@@ -876,18 +904,14 @@ export default function App() {
       {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/>
-            <circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5 4-4.5h3m-7 4.5L9 8h4l2 3.5"/>
-          </svg>
+          <img src={appIcon} className="sidebar-logo" alt="GPX Analyzer Logo" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
           <div>
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <h1 className="logo-title">GIRO GPX</h1>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '6px' }}>v{versionData.version}</span>
-            </div>
-            <div className="logo-subtitle" style={{ color: isLocalMode ? '#00d2ff' : 'var(--text-muted)' }}>
-              {isLocalMode ? 'Modo Autónomo Local' : 'Métricas de Ciclismo'}
+            <h1 className="logo-title" style={{ fontSize: '15px', lineHeight: '1.2' }}>GPX Analyzer: Bike, Run & Hike</h1>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+              <span className="logo-subtitle" style={{ color: isLocalMode ? '#00d2ff' : 'var(--text-muted)' }}>
+                {isLocalMode ? 'Modo Autónomo Local' : 'Métricas de Actividad'}
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '6px' }}>v{versionData.version}</span>
             </div>
           </div>
         </div>
@@ -906,6 +930,17 @@ export default function App() {
           </label>
           <button className="config-btn" onClick={() => setIsConfigOpen(true)} title="Configuración de usuario y zonas">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button 
+            className="config-btn" 
+            onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')} 
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {theme === 'dark' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
           </button>
         </div>
 
@@ -984,6 +1019,20 @@ export default function App() {
 
         {/* PDF Report Button */}
         <ReportButton activity={selectedActivity} config={config} />
+
+        {/* Autor credits */}
+        <div style={{ 
+          fontSize: '10px', 
+          color: 'var(--text-muted)', 
+          textAlign: 'center', 
+          marginTop: '16px', 
+          padding: '8px 0', 
+          borderTop: '1px solid var(--card-border)',
+          fontFamily: 'var(--font-sans)',
+          opacity: 0.7 
+        }}>
+          Autor: TuwebEnLaRed - Benjamín Rodriguez
+        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
@@ -993,7 +1042,7 @@ export default function App() {
             <div className="welcome-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <h2 className="welcome-title">Bienvenido a Giro GPX</h2>
+            <h2 className="welcome-title">Bienvenido a GPX Analyzer</h2>
             <p className="welcome-desc">
               {isLocalMode 
                 ? 'Ejecutando en Modo Local. Sube tus archivos GPX para analizarlos al instante directamente en tu navegador de forma privada. Tus rutas se procesan localmente y se guardan en el navegador sin subirse a ningún servidor.'
@@ -1074,46 +1123,57 @@ export default function App() {
               {/* HR zones card */}
               <HeartRateZones points={selectedActivity.points} stats={selectedActivity.stats} config={config} />
               
-              {/* Detected Climbs card */}
-              <div className="glass-card climbs-section" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <h3 className="hr-zones-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-                  Puertos y Repechos {selectedActivity.climbs ? `(${selectedActivity.climbs.length})` : '(0)'}
-                </h3>
-                {selectedActivity.climbs && selectedActivity.climbs.length > 0 ? (
-                  <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '340px', paddingRight: '4px' }}>
-                    {selectedActivity.climbs.map((climb, index) => {
-                      const isHighlighted = activeClimb && activeClimb.name === climb.name;
-                      return (
-                        <div 
-                          key={index} 
-                          className={`climb-card ${isHighlighted ? 'active' : ''}`}
-                          onMouseEnter={() => setActiveClimb(climb)}
-                          onMouseLeave={() => setActiveClimb(null)}
-                          onClick={() => setActiveClimb(climb)}
-                          style={{
-                            borderLeft: isHighlighted ? '4px solid var(--strava-orange)' : '4px solid transparent',
-                            background: isHighlighted ? 'rgba(252, 97, 0, 0.05)' : ''
-                          }}
-                        >
-                          <div className="climb-left">
-                            <span className="climb-name">⛰️ {climb.name}</span>
-                            <span className="climb-sub">km {climb.startKm} • {climb.lengthKm} km</span>
+              {/* Climbing Pro / Detected Climbs card */}
+              {currentClimbToShow ? (
+                <ClimbingPro 
+                  climb={currentClimbToShow}
+                  points={selectedActivity.points}
+                  hoverPoint={hoverPoint}
+                  onClose={() => setActiveClimb(null)}
+                  isLocked={!!activeClimb}
+                  onHoverPoint={setHoverPoint}
+                />
+              ) : (
+                <div className="glass-card climbs-section" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <h3 className="hr-zones-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                    Puertos y Repechos {selectedActivity.climbs ? `(${selectedActivity.climbs.length})` : '(0)'}
+                  </h3>
+                  {selectedActivity.climbs && selectedActivity.climbs.length > 0 ? (
+                    <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '340px', paddingRight: '4px' }}>
+                      {selectedActivity.climbs.map((climb, index) => {
+                        const isHighlighted = activeClimb && activeClimb.name === climb.name;
+                        return (
+                          <div 
+                            key={index} 
+                            className={`climb-card ${isHighlighted ? 'active' : ''}`}
+                            onMouseEnter={() => setActiveClimb(climb)}
+                            onMouseLeave={() => setActiveClimb(null)}
+                            onClick={() => setActiveClimb(climb)}
+                            style={{
+                              borderLeft: isHighlighted ? '4px solid var(--strava-orange)' : '4px solid transparent',
+                              background: isHighlighted ? 'rgba(252, 97, 0, 0.05)' : ''
+                            }}
+                          >
+                            <div className="climb-left">
+                              <span className="climb-name">⛰️ {climb.name}</span>
+                              <span className="climb-sub">km {climb.startKm} • {climb.lengthKm} km</span>
+                            </div>
+                            <div className="climb-right">
+                              <span className="climb-grade-tag" style={{ color: isHighlighted ? 'var(--strava-orange)' : '' }}>{climb.avgGrade}% avg</span>
+                              <span className="climb-ele-gain">+{climb.eleGain}m (max {climb.maxGrade}%)</span>
+                            </div>
                           </div>
-                          <div className="climb-right">
-                            <span className="climb-grade-tag" style={{ color: isHighlighted ? 'var(--strava-orange)' : '' }}>{climb.avgGrade}% avg</span>
-                            <span className="climb-ele-gain">+{climb.eleGain}m (max {climb.maxGrade}%)</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', margin: 'auto', padding: '20px', lineHeight: '1.4' }}>
-                    No se han detectado subidas notables (puertos o repechos) en este recorrido.
-                  </div>
-                )}
-              </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', margin: 'auto', padding: '20px', lineHeight: '1.4' }}>
+                      No se han detectado subidas notables (puertos o repechos) en este recorrido.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Synchronized Recharts charts bottom */}
@@ -1131,17 +1191,25 @@ export default function App() {
 
       {/* SETTINGS MODAL */}
       {isConfigOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={() => { if (!isFirstRun) setIsConfigOpen(false); }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                Configuración de Ciclista
+                {isFirstRun ? 'Configuración Inicial de Usuario' : 'Configuración de Usuario'}
               </h3>
-              <button className="modal-close" onClick={() => setIsConfigOpen(false)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+              {!isFirstRun && (
+                <button className="modal-close" onClick={() => setIsConfigOpen(false)}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              )}
             </div>
+
+            {isFirstRun && (
+              <div style={{ background: 'rgba(252, 97, 0, 0.1)', borderLeft: '4px solid var(--strava-orange)', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                👋 <strong>¡Bienvenido!</strong> Por favor, completa tu configuración inicial para comenzar. Se auto-calcularán tus zonas de pulso según tu edad.
+              </div>
+            )}
 
             {valError && (
               <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '8px', fontSize: '12px', marginBottom: '16px', fontWeight: 600 }}>
@@ -1150,10 +1218,11 @@ export default function App() {
             )}
 
             <div className="config-form-group">
-              <label className="config-label">Nombre del Ciclista</label>
+              <label className="config-label">Nombre del Deportista</label>
               <input 
                 type="text" 
                 className="config-input" 
+                placeholder="Ej. Benjamin"
                 value={tempName} 
                 onChange={(e) => setTempName(e.target.value)} 
               />
@@ -1165,8 +1234,20 @@ export default function App() {
                 <input 
                   type="number" 
                   className="config-input" 
+                  placeholder="Ej. 47"
                   value={tempAge} 
-                  onChange={(e) => setTempAge(e.target.value)} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTempAge(val);
+                    const ageVal = parseInt(val, 10);
+                    if (!isNaN(ageVal) && ageVal > 0) {
+                      const mhr = 220 - ageVal;
+                      setTempZ1Max(Math.round(mhr * 0.72).toString());
+                      setTempZ2Max(Math.round(mhr * 0.84).toString());
+                      setTempZ3Max(Math.round(mhr * 0.91).toString());
+                      setTempZ4Max(Math.round(mhr * 0.98).toString());
+                    }
+                  }} 
                 />
               </div>
               <div className="config-form-group">
@@ -1175,6 +1256,7 @@ export default function App() {
                   type="number" 
                   step="0.1"
                   className="config-input" 
+                  placeholder="Ej. 77"
                   value={tempWeight} 
                   onChange={(e) => setTempWeight(e.target.value)} 
                 />
@@ -1182,7 +1264,36 @@ export default function App() {
             </div>
 
             <div className="hr-zones-edit-section">
-              <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Zonas de Pulso (Límites ppm)</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '10px' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Zonas de Pulso (ppm)</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {tempAge && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      MHR: {220 - parseInt(tempAge, 10)} ppm
+                    </span>
+                  )}
+                  <button 
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      const ageVal = parseInt(tempAge, 10);
+                      if (!isNaN(ageVal) && ageVal > 0) {
+                        const mhr = 220 - ageVal;
+                        setTempZ1Max(Math.round(mhr * 0.72).toString());
+                        setTempZ2Max(Math.round(mhr * 0.84).toString());
+                        setTempZ3Max(Math.round(mhr * 0.91).toString());
+                        setTempZ4Max(Math.round(mhr * 0.98).toString());
+                        setValError('');
+                      } else {
+                        setValError('Introduce una edad válida para calcular.');
+                      }
+                    }}
+                    style={{ padding: '3px 8px', fontSize: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    Recalcular
+                  </button>
+                </div>
+              </div>
               
               <div className="hr-zone-edit-row">
                 <span className="hr-zone-color-lbl"><div className="zone-dot zone-1-bg" /> Z1 Máx</span>
@@ -1239,8 +1350,10 @@ export default function App() {
             </div>
 
             <div className="modal-actions">
-              <button className="btn-secondary" onClick={() => setIsConfigOpen(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleSaveConfig}>Guardar</button>
+              {!isFirstRun && <button className="btn-secondary" onClick={() => setIsConfigOpen(false)}>Cancelar</button>}
+              <button className="btn-primary" onClick={handleSaveConfig}>
+                {isFirstRun ? 'Comenzar a Analizar' : 'Guardar'}
+              </button>
             </div>
           </div>
         </div>
